@@ -4,6 +4,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
+import openpyxl
 
 # To Improve speed and cache data
 @st.cache(persist=True, allow_output_mutation=True)
