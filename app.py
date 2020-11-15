@@ -25,7 +25,7 @@ def explore_data(my_datafile):
 
     for i in range(len(sheets)):
         df = pd.read_excel(my_datafile, sheet_name = sheets[i])
-        st.dataframe(df)
+        
     return df    
     
 def to_excel_dev(df1, df2, sh1, sh2, filename):
