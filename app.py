@@ -6,8 +6,10 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import openpyxl
 import os
+import base64
+from io import BytesIO
 
-download_pipeline = (r"D:\Downloads\OppDown1.xlsx")
+#download_pipeline = (r"D:\Downloads\OppDown1.xlsx")
 
 # To Improve speed and cache data
 @st.cache(persist=True, allow_output_mutation=True)
@@ -15,6 +17,25 @@ def explore_data(dataset):
     df = pd.read_csv(dataset)
     dataset.seek(0)
     return df
+    
+def to_excel_dev(df1, df2, sh1, sh2, filename):
+    output = BytesIO()
+    #writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    writer = pd.ExcelWriter(output)
+    df1.to_excel(writer, sheet_name=sh1, index = True)
+    df2.to_excel(writer, sheet_name=sh2, index = True)
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
+
+def get_table_download_link(df1, df2, sh1, sh2, filename):
+    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    in:  dataframe1, dataframe2, sheetname1, sheetname2, filename
+    out: href string
+    """
+    val = to_excel_dev(df1, df2, sh1, sh2, filename)
+    b64 = base64.b64encode(val)  # val looks like b'...'
+    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename}>Download as {filename} file</a>' # decode b'abc' => abc    
 
 #PENDING ???
 def file_selector(folder_path='./downloads'):
@@ -381,13 +402,8 @@ def pipeline_opp_handling():
             else:
                 st.write(vc_plot.plot(kind='barh'))
                 
-            if st.button("Download as ( D:\Downloads\OppDown1.xlsx )"):   
-                #filename = file_selector()
-                #writer3 = pd.ExcelWriter('OppDown1.xlsx')
-                writer3 = pd.ExcelWriter(download_pipeline)
-                vc_plot.to_excel(writer3, sheet_name = 'Pipeline-Opp', index = True)
-                pipe_data1.to_excel(writer3, sheet_name = 'Original', index = True)
-                writer3.save()
+            #enable download as hyperlink
+            st.markdown(get_table_download_link(vc_plot, pipe_data1, 'Pipeline-Opp', 'Original', 'OppDown1.xlsx'), unsafe_allow_html=True)
                 
             st.set_option('deprecation.showPyplotGlobalUse', False)
             st.pyplot()
