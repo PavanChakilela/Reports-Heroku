@@ -8,6 +8,7 @@ import openpyxl
 import os
 import base64
 from io import BytesIO
+import xlrd
 
 # To Improve speed and cache data
 @st.cache(persist=True, allow_output_mutation=True)
