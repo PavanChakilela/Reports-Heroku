@@ -9,14 +9,23 @@ import os
 import base64
 from io import BytesIO
 
-#download_pipeline = (r"D:\Downloads\OppDown1.xlsx")
-
 # To Improve speed and cache data
 @st.cache(persist=True, allow_output_mutation=True)
-def explore_data(dataset):
+def explore_data_csv(dataset):
     df = pd.read_csv(dataset)
     dataset.seek(0)
     return df
+    
+# To Improve speed and cache data
+@st.cache(persist=True, allow_output_mutation=True)
+def explore_data(my_datafile):
+    all_sheet = pd.ExcelFile(my_datafile)   
+    sheets = all_sheet.sheet_names
+
+    for i in range(len(sheets)):
+        df = pd.read_excel(my_datafile, sheet_name = sheets[i])
+        st.dataframe(df)
+    return df    
     
 def to_excel_dev(df1, df2, sh1, sh2, filename):
     output = BytesIO()
@@ -35,7 +44,7 @@ def get_table_download_link(df1, df2, sh1, sh2, filename):
     """
     val = to_excel_dev(df1, df2, sh1, sh2, filename)
     b64 = base64.b64encode(val)  # val looks like b'...'
-    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename}>Download as {filename} file</a>' # decode b'abc' => abc    
+    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename}>Download as ({filename}) file</a>' # decode b'abc' => abc    
 
 #PENDING ???
 def file_selector(folder_path='./downloads'):
@@ -200,8 +209,7 @@ def display_FTE_designation_split(proj_data):
 def filter_specific_criteria(proj_data, proj2_data):    
     menu_list = st.multiselect("",("Location","Designation","Department","StartDate","EndDate","AssociateName","Supervisor"), key="fil2")
     st.write("You selected",len(menu_list),"fields")
-    #print(menu_list, len(menu_list), type(menu_list))
-           
+               
     filt_loc = []
     filt_des = []
     filt_dep = []
@@ -311,7 +319,7 @@ def dataframe_difference(df1, df2, which=None):
 #Check if "FTE view of Merged 2 sheets (MBM & BTM)"
 def file_upload_2(data1):    
     st.sidebar.warning("Do you want to Merge with 2nd IMIS file?")
-    my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["csv"])
+    my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["xlsx"])
     data3=data1
     if my_dataset2 is not None:
         #Open IMIS file2
@@ -323,7 +331,7 @@ def file_upload_2(data1):
     return data3  
 
 def pipeline_opp_handling():
-    pipe_dataset1 = st.sidebar.file_uploader("Upload Bulk Upload File in CSV format", type=["csv"])
+    pipe_dataset1 = st.sidebar.file_uploader("Upload Bulk Upload File in CSV format", type=["xlsx"])
     if pipe_dataset1 is not None:
 
         #Open PipeLine Opportunity File for Bulk Upload
@@ -426,7 +434,7 @@ def main():
         html_temp2 = """ <h3 style="color:{};text-align:center;">FTE View </h3> """
         st.markdown(html_temp2.format('royalblue','white'),unsafe_allow_html=True)
         
-        my_dataset = st.sidebar.file_uploader("Upload IMIS Allocation File in CSV format", type=["csv"])
+        my_dataset = st.sidebar.file_uploader("Upload IMIS Allocation File in CSV format", type=["xlsx"])
         
         if my_dataset is not None:
 
@@ -473,14 +481,9 @@ def main():
             
             #DataFrame for Project FTE split
             proj_data, proj_FTE_matrix = display_FTE_designation_split(proj_data)
-            
-            if st.button("Download as file1.xlsx to Current Folder"):
-                #proj_data.to_csv("file1.xlsx")
-                
-                writer1 = pd.ExcelWriter('file1.xlsx')
-                proj_FTE_matrix.to_excel(writer1, sheet_name = 'FTE1-Split', index = True)
-                proj_data.to_excel(writer1, sheet_name = 'FTE1', index = True)
-                writer1.save()
+                            
+            #enable download as hyperlink
+            st.markdown(get_table_download_link(proj_FTE_matrix, proj_data, 'FTE1-Split', 'FTE1', 'FTE-view.xlsx'), unsafe_allow_html=True)    
                
             #MultiSelect based on Location / Designation / Department / StartDate / EndDate / AssociateName / Supervisor
             #New dataframe : PROJ2 before filter same as PROJ
@@ -489,14 +492,9 @@ def main():
                 proj_data, proj2_data = filter_specific_criteria(proj_data, proj2_data)
                 
                 proj2_data, proj_FTE_matrix = display_FTE_designation_split(proj2_data)
-                
-                if st.button("Download as file2.xlsx to Current Folder"):
-                    #proj2_data.to_csv("file2.csv")
-                                        
-                    writer2 = pd.ExcelWriter('file2.xlsx')
-                    proj_FTE_matrix.to_excel(writer2, sheet_name = 'FTE2-Split', index = True)
-                    proj2_data.to_excel(writer2, sheet_name = 'FTE2', index = True)
-                    writer2.save()
+                    
+                #enable download as hyperlink
+                st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view.xlsx'), unsafe_allow_html=True)        
  
     elif choice == "Compare 2 versions":
         
