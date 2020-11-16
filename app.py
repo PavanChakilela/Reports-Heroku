@@ -16,38 +16,53 @@ def explore_data_csv(dataset):
     df = pd.read_csv(dataset)
     dataset.seek(0)
     return df
+       
+def select_sheet_excel(my_datafile, sheets, key):
+    #for i in range(len(sheets)):
+    #    df = pd.read_excel(my_datafile, sheet_name = sheets[i])
+    
+    sheet_choice = st.radio(f"Select the appropriate sheet for processing from ==> ({my_datafile.name})",sheets, key=key)
+    
+    df = pd.read_excel(my_datafile, sheet_name = sheet_choice)
+    return df 
     
 # To Improve speed and cache data
 @st.cache(persist=True, allow_output_mutation=True)
 def explore_data(my_datafile):
     all_sheet = pd.ExcelFile(my_datafile)   
     sheets = all_sheet.sheet_names
-
-    for i in range(len(sheets)):
-        df = pd.read_excel(my_datafile, sheet_name = sheets[i])
-        
-    return df    
+    return sheets  
     
-def to_excel_dev(df1, df2, sh1, sh2, filename):
+# To Improve speed and cache data
+def file_excel_explore_data(my_datafile, key):
+    sheets = explore_data(my_datafile)   
+        
+    df = select_sheet_excel(my_datafile, sheets, key)
+    return df     
+    
+def to_excel_dev(df1, df2, sh1, sh2, filename, df3=None):
     output = BytesIO()
-    #writer = pd.ExcelWriter(output, engine='xlsxwriter')
     writer = pd.ExcelWriter(output)
     df1.to_excel(writer, sheet_name=sh1, index = True)
     df2.to_excel(writer, sheet_name=sh2, index = True)
+    if df3 is None:
+        testa = 0
+    else:    
+        df3.to_excel(writer, sheet_name=sh1, startrow = 20, index = True) #Hard coded startrow=20 to be removed ???
     writer.save()
     processed_data = output.getvalue()
     return processed_data
 
-def get_table_download_link(df1, df2, sh1, sh2, filename):
+def get_table_download_link(df1, df2, sh1, sh2, filename, df3=None):
     """Generates a link allowing the data in a given panda dataframe to be downloaded
     in:  dataframe1, dataframe2, sheetname1, sheetname2, filename
     out: href string
     """
-    val = to_excel_dev(df1, df2, sh1, sh2, filename)
+    val = to_excel_dev(df1, df2, sh1, sh2, filename, df3)
     b64 = base64.b64encode(val)  # val looks like b'...'
     return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename}>Download as ({filename}) file</a>' # decode b'abc' => abc    
 
-#PENDING ???
+#Still Pending ???
 def file_selector(folder_path='./downloads'):
 	filenames = os.listdir(folder_path)
 	selected_filename = st.selectbox('Select a file', filenames)
@@ -324,7 +339,7 @@ def file_upload_2(data1):
     data3=data1
     if my_dataset2 is not None:
         #Open IMIS file2
-        data2 = explore_data(my_dataset2) 
+        data2 = file_excel_explore_data(my_dataset2, key="FTEsh2") 
                 
         #Append this file2 IMIS contents
         #data3 = data1.append(data2, ignore_index=True, sort=False) 
@@ -336,7 +351,7 @@ def pipeline_opp_handling():
     if pipe_dataset1 is not None:
 
         #Open PipeLine Opportunity File for Bulk Upload
-        pipe_data1 = explore_data(pipe_dataset1)
+        pipe_data1 = file_excel_explore_data(pipe_dataset1, key="Oppsh1")
         
         #Opportunities Specific
         st.subheader("Show Opportunity details")          
@@ -417,7 +432,83 @@ def pipeline_opp_handling():
             st.set_option('deprecation.showPyplotGlobalUse', False)
             st.pyplot()
             
+def display_trends(proj_data, proj_FTE_matrix):
     
+    # round to two decimal places in python pandas 
+    pd.set_option('precision', 2)   
+
+    #Generate pivot for FTE COUNTS
+    pivot_proj_FTE_count = pd.DataFrame(proj_data)
+    pivot_proj_FTE_count.rename(columns = {'Project Name':'ProjectName'}, inplace = True)
+    pivot_proj_FTE_count["FTE"] = pivot_proj_FTE_count["Allocation Percentage"]/100.0
+        
+    #use cross tab for % normalization at index level i.e. project-name
+    pivot_proj_FTE_count2 = pd.crosstab([pivot_proj_FTE_count.ProjectName], \
+                                        columns=pivot_proj_FTE_count.Designation, \
+                                        values=pivot_proj_FTE_count.FTE, aggfunc=sum, margins=True, margins_name="FTETotal")
+    
+    #pivot_proj_FTE = pd.pivot_table(proj_data, index=["Project Name"], columns=["Designation"], \
+    #                                           values=["Allocation Percentage"], aggfunc='sum',  margins=True)                                         
+    #pivot_proj_FTE.rename(columns = {'Allocation Percentage':'FTE'}, inplace = True)
+    #pivot_proj_FTE["FTE"] = pivot_proj_FTE["FTE"]/100.0
+    
+    st.dataframe(pivot_proj_FTE_count2)
+    
+    #extend to % FTE per each row
+    pivot_proj_FTE_pct = pd.DataFrame(proj_data)
+    pivot_proj_FTE_pct.rename(columns = {'Project Name':'ProjectName'}, inplace = True)
+    pivot_proj_FTE_pct["FTE"] = pivot_proj_FTE_pct["Allocation Percentage"]/100.0
+                                                  
+    #use cross tab for % normalization at index level i.e. project-name
+    pivot_proj_FTE_pct2 = pd.crosstab([pivot_proj_FTE_pct.ProjectName], \
+                                        columns=pivot_proj_FTE_pct.Designation, \
+                                        values=pivot_proj_FTE_pct.FTE, aggfunc=sum, margins=True, margins_name="FTETotal", normalize='index')                                               
+    
+    #convert all values into 100%    
+    pivot_proj_FTE_pct2 = pivot_proj_FTE_pct2[:] * 100
+    st.dataframe(pivot_proj_FTE_pct2)
+    
+    df = pivot_proj_FTE_count2  # FTE count
+    df2 = pivot_proj_FTE_pct2   # FTE % at project level (row-wise)    
+    
+    #enable download as hyperlink
+    st.markdown(get_table_download_link(pivot_proj_FTE_count2, proj_data, 'Pivot-%-FTE', 'OverallFTE', 'FTE-%-Pivot.xlsx', pivot_proj_FTE_pct2), unsafe_allow_html=True)
+
+    all_columns_names = df.columns.tolist()
+    type_of_plot = st.selectbox("Select the Type of Plot for FTE Trend#", ["barh", "bar", "line", "area"])
+    selected_column_names = st.multiselect('Select Columns To Plot', all_columns_names, default="PAT", key="tre1")
+    
+    st.success("Generating A Customizable Plot of: {} for :: {}".format(type_of_plot,selected_column_names))
+    
+    c1,c2 = st.beta_columns([1,1])
+    
+    #Display 
+    with c1:
+        fig1, axs = plt.subplots()
+        plt.title("FTE Trend Plots")
+        plt.ylabel("FTE count#")
+        custom_plot = df[selected_column_names]
+        #plt.setp(autotexts, size='x-small')
+        st.write(custom_plot.plot(kind=type_of_plot))
+        st.set_option('deprecation.showPyplotGlobalUse', False)
+        st.pyplot()
+    
+    #Display 
+    with c2:
+        fig1, axs = plt.subplots()
+        plt.title("FTE Trend Plots")
+        plt.ylabel("FTE count#")
+        # FTETotal is still not working in FTE% pivot / crosstab
+        for column in selected_column_names:
+            if column == 'FTETotal':
+                selected_column_names.remove('FTETotal')
+        custom_plot = df2[selected_column_names]
+        #plt.setp(autotexts, size='x-small')
+        st.write(custom_plot.plot(kind=type_of_plot))
+        st.set_option('deprecation.showPyplotGlobalUse', False)
+        st.pyplot()
+    
+   
 def main():
 
     html_temp = """
@@ -440,7 +531,7 @@ def main():
         if my_dataset is not None:
 
             #Open IMIS file
-            data1 = explore_data(my_dataset)
+            data1 = file_excel_explore_data(my_dataset, key="FTEsh1")
             
             #Default Dataframe
             data = data1
@@ -482,7 +573,7 @@ def main():
             
             #DataFrame for Project FTE split
             proj_data, proj_FTE_matrix = display_FTE_designation_split(proj_data)
-                            
+                                        
             #enable download as hyperlink
             st.markdown(get_table_download_link(proj_FTE_matrix, proj_data, 'FTE1-Split', 'FTE1', 'FTE-view.xlsx'), unsafe_allow_html=True)    
                
@@ -492,10 +583,18 @@ def main():
             if st.checkbox("Filter based on Location, Designation, Department, StartDate, EndDate, AssociateName, Supervisor"): 
                 proj_data, proj2_data = filter_specific_criteria(proj_data, proj2_data)
                 
+                #Calculate and Display FTE TOTAL counts               
+                proj2_data = display_FTE_count(proj2_data)
+                                
                 proj2_data, proj_FTE_matrix = display_FTE_designation_split(proj2_data)
                     
                 #enable download as hyperlink
-                st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view.xlsx'), unsafe_allow_html=True)        
+                st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view.xlsx'), unsafe_allow_html=True) 
+
+            #Plot line graphs
+            if st.checkbox("Interested in FTE Trend Graphs? (at Project level)"): 
+                st.info("Quick Summary table of FTE counts & percentages:")
+                display_trends(proj_data, proj_FTE_matrix)                
  
     elif choice == "Compare 2 versions":
         
@@ -503,13 +602,13 @@ def main():
         if my_dataset1 is not None:
 
             #Open IMIS file1
-            data1 = explore_data(my_dataset1)
+            data1 = file_excel_explore_data(my_dataset1, key="Comparesh1")
 
         my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["csv"])
         if my_dataset2 is not None:
 
             #Open IMIS file2
-            data2 = explore_data(my_dataset2)        
+            data2 = file_excel_explore_data(my_dataset2, key="Comparesh2")        
         
             #Compare 2 versions
             st.subheader("Comparision of 2 versions")
