@@ -9,6 +9,7 @@ import os
 import base64
 from io import BytesIO
 import xlrd
+from datetime import datetime
 
 # To Improve speed and cache data
 @st.cache(persist=True, allow_output_mutation=True)
@@ -48,7 +49,7 @@ def to_excel_dev(df1, df2, sh1, sh2, filename, df3=None):
     if df3 is None:
         testa = 0
     else:    
-        df3.to_excel(writer, sheet_name=sh1, startrow = 20, index = True) #Hard coded startrow=20 to be removed ???
+        df3.to_excel(writer, sheet_name=sh1, startrow = len(df1.index)+4, index = True) #Hard coded startrow=20 to be removed ???
     writer.save()
     processed_data = output.getvalue()
     return processed_data
@@ -59,8 +60,10 @@ def get_table_download_link(df1, df2, sh1, sh2, filename, df3=None):
     out: href string
     """
     val = to_excel_dev(df1, df2, sh1, sh2, filename, df3)
-    b64 = base64.b64encode(val)  # val looks like b'...'
-    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename}>Download as ({filename}) file</a>' # decode b'abc' => abc    
+    b64 = base64.b64encode(val)  # val looks like b'...' 
+    n = datetime.now()
+    filename_timestamp = f'{filename}_{n.year}_{n.month}_{n.day}_{n.hour}_{n.minute}_{n.second}.xlsx'
+    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename_timestamp}>Download as ({filename_timestamp}) file</a>' # decode b'abc' => abc    
 
 #Still Pending ???
 def file_selector(folder_path='./downloads'):
@@ -70,16 +73,17 @@ def file_selector(folder_path='./downloads'):
     
 #Map Designations 
 def map_designations(proj_data):     
-    proj_data.loc[proj_data['Grade Id'] == "E80", 'Designation'] = "PAT"
-    proj_data.loc[proj_data['Grade Id'] == "E75", 'Designation'] = "PA"
-    proj_data.loc[proj_data['Grade Id'] == "E70", 'Designation'] = "PA"   
-    proj_data.loc[proj_data['Grade Id'] == "E65", 'Designation'] = "A"
-    proj_data.loc[proj_data['Grade Id'] == "E60", 'Designation'] = "SA"
-    proj_data.loc[proj_data['Grade Id'] == "E50", 'Designation'] = "M"        
-    proj_data.loc[proj_data['Grade Id'] == "E45", 'Designation'] = "SM"
-    proj_data.loc[proj_data['Grade Id'] == "E40", 'Designation'] = "AD"
-    proj_data.loc[proj_data['Grade Id'] == "E35", 'Designation'] = "D"
-    proj_data.loc[proj_data['Grade Id'] == "E33", 'Designation'] = "SD"  
+    pd.options.mode.chained_assignment = None  # default='warn'
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E80", 'Designation'] = "PAT"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E75", 'Designation'] = "PA"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E70", 'Designation'] = "PA"   
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E65", 'Designation'] = "A"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E60", 'Designation'] = "SA"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E50", 'Designation'] = "M"        
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E45", 'Designation'] = "SM"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E40", 'Designation'] = "AD"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E35", 'Designation'] = "D"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E33", 'Designation'] = "SD"  
     return proj_data     
     
 #Calculate and Display FTE counts 
@@ -335,7 +339,7 @@ def dataframe_difference(df1, df2, which=None):
 #Check if "FTE view of Merged 2 sheets (MBM & BTM)"
 def file_upload_2(data1):    
     st.sidebar.warning("Do you want to Merge with 2nd IMIS file?")
-    my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["xlsx"])
+    my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in XLSX format", type=["xlsx"])
     data3=data1
     if my_dataset2 is not None:
         #Open IMIS file2
@@ -347,7 +351,7 @@ def file_upload_2(data1):
     return data3  
 
 def pipeline_opp_handling():
-    pipe_dataset1 = st.sidebar.file_uploader("Upload Bulk Upload File in CSV format", type=["xlsx"])
+    pipe_dataset1 = st.sidebar.file_uploader("Upload Bulk Upload File in XLSX format", type=["xlsx"])
     if pipe_dataset1 is not None:
 
         #Open PipeLine Opportunity File for Bulk Upload
@@ -427,7 +431,7 @@ def pipeline_opp_handling():
                 st.write(vc_plot.plot(kind='barh'))
                 
             #enable download as hyperlink
-            st.markdown(get_table_download_link(vc_plot, pipe_data1, 'Pipeline-Opp', 'Original', 'OppDown1.xlsx'), unsafe_allow_html=True)
+            st.markdown(get_table_download_link(vc_plot, pipe_data1, 'Pipeline-Opp', 'Original', 'OppDown1'), unsafe_allow_html=True)
                 
             st.set_option('deprecation.showPyplotGlobalUse', False)
             st.pyplot()
@@ -452,7 +456,8 @@ def display_trends(proj_data, proj_FTE_matrix):
     #pivot_proj_FTE.rename(columns = {'Allocation Percentage':'FTE'}, inplace = True)
     #pivot_proj_FTE["FTE"] = pivot_proj_FTE["FTE"]/100.0
     
-    st.dataframe(pivot_proj_FTE_count2)
+    cm2 = sns.light_palette("navy", as_cmap=True)
+    st.dataframe(pivot_proj_FTE_count2.style.background_gradient(cmap=cm2))
     
     #extend to % FTE per each row
     pivot_proj_FTE_pct = pd.DataFrame(proj_data)
@@ -466,17 +471,18 @@ def display_trends(proj_data, proj_FTE_matrix):
     
     #convert all values into 100%    
     pivot_proj_FTE_pct2 = pivot_proj_FTE_pct2[:] * 100
-    st.dataframe(pivot_proj_FTE_pct2)
+    cm3 = sns.light_palette("navy", as_cmap=True)
+    st.dataframe(pivot_proj_FTE_pct2.style.background_gradient(cmap=cm3))
     
     df = pivot_proj_FTE_count2  # FTE count
     df2 = pivot_proj_FTE_pct2   # FTE % at project level (row-wise)    
     
     #enable download as hyperlink
-    st.markdown(get_table_download_link(pivot_proj_FTE_count2, proj_data, 'Pivot-%-FTE', 'OverallFTE', 'FTE-%-Pivot.xlsx', pivot_proj_FTE_pct2), unsafe_allow_html=True)
+    st.markdown(get_table_download_link(pivot_proj_FTE_count2, proj_data, 'Pivot-%-FTE', 'OverallFTE', 'FTE-%-Pivot', pivot_proj_FTE_pct2), unsafe_allow_html=True)
 
     all_columns_names = df.columns.tolist()
     type_of_plot = st.selectbox("Select the Type of Plot for FTE Trend#", ["barh", "bar", "line", "area"])
-    selected_column_names = st.multiselect('Select Columns To Plot', all_columns_names, default="PAT", key="tre1")
+    selected_column_names = st.multiselect('Select Columns To Plot', all_columns_names, default="A", key="tre1")
     
     st.success("Generating A Customizable Plot of: {} for :: {}".format(type_of_plot,selected_column_names))
     
@@ -526,7 +532,7 @@ def main():
         html_temp2 = """ <h3 style="color:{};text-align:center;">FTE View </h3> """
         st.markdown(html_temp2.format('royalblue','white'),unsafe_allow_html=True)
         
-        my_dataset = st.sidebar.file_uploader("Upload IMIS Allocation File in CSV format", type=["xlsx"])
+        my_dataset = st.sidebar.file_uploader("Upload IMIS Allocation File in XLSX format", type=["xlsx"])
         
         if my_dataset is not None:
 
@@ -540,34 +546,38 @@ def main():
             data = file_upload_2(data1)
             
             #All Projects, All Associates as-is dataframe
-            st.subheader("Show ALL Projects Associates")
+            st.info("Refer Original records of ALL Projects / Associates details")
                 
             with st.beta_expander('Complete View (as-is IMIS report)',expanded=False):
                 st.dataframe(data)
                 
             #Project Specific
-            st.subheader("Show Project specific ASSOCIATE details")
+            st.success("Show Project specific Associate, FTE & Pyramid details")
             
             #Remove duplicate project-ids
             #project_list = data['Project Id'].unique().tolist()
             project_list = data['Project Name'].unique().tolist()
             
             #selection based on projects list
-            project_id_list = st.multiselect("Pls select project(s)", project_list, key="fil1")
+            proj_wish = st.radio("All Projects / Select MutiProjects?",("All","SelectedProject(s)"))
+            if proj_wish == "All":
+                project_id_list = project_list
+            else:     
+                project_id_list = st.multiselect("Pls select project(s)", project_list, key="fil1")
             
             #List of projects for which query is needed
             proj_filt1 = data['Project Name'].isin(project_id_list)
             
             #New dataframe of PROJ selected using multiselect
             proj_data = data[proj_filt1]
-            
+                        
             #Map Designations   
             proj_data = map_designations(proj_data)        
             
             #Display project specific DataFrame for the selected List of Projects
             st.dataframe(proj_data[['Associate Id', 'Associate Name', 'Designation', 'Project Name', \
             'Allocation Percentage', 'Offshore/Onsite', 'Department Name', 'Start Date', 'End Date', 'Supervisor Name']], height=200)
-          
+                      
             #Calculate and Display FTE TOTAL counts               
             proj_data = display_FTE_count(proj_data)
             
@@ -575,7 +585,7 @@ def main():
             proj_data, proj_FTE_matrix = display_FTE_designation_split(proj_data)
                                         
             #enable download as hyperlink
-            st.markdown(get_table_download_link(proj_FTE_matrix, proj_data, 'FTE1-Split', 'FTE1', 'FTE-view.xlsx'), unsafe_allow_html=True)    
+            st.markdown(get_table_download_link(proj_FTE_matrix, proj_data, 'FTE1-Split', 'FTE1', 'FTE-view'), unsafe_allow_html=True)    
                
             #MultiSelect based on Location / Designation / Department / StartDate / EndDate / AssociateName / Supervisor
             #New dataframe : PROJ2 before filter same as PROJ
@@ -587,12 +597,12 @@ def main():
                 proj2_data = display_FTE_count(proj2_data)
                                 
                 proj2_data, proj_FTE_matrix = display_FTE_designation_split(proj2_data)
-                    
+                                    
                 #enable download as hyperlink
-                st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view.xlsx'), unsafe_allow_html=True) 
+                st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view'), unsafe_allow_html=True) 
 
             #Plot line graphs
-            if st.checkbox("Interested in FTE Trend Graphs? (at Project level)"): 
+            if st.checkbox("Interested in FTE Trends? (at Project level)"): 
                 st.info("Quick Summary table of FTE counts & percentages:")
                 display_trends(proj_data, proj_FTE_matrix)                
  
