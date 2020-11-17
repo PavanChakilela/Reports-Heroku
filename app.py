@@ -94,6 +94,9 @@ def map_designations(proj_data):
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N35", 'Designation'] = "D"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E33", 'Designation'] = "SD"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N33", 'Designation'] = "SD"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E30", 'Designation'] = "SD"      #SBU Head - Practice considered as SD
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E25", 'Designation'] = "SD"      #SBU Head - MDU considered as SD
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E20", 'Designation'] = "SD"      #SBU Leader - INS considered as SD
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C80", 'Designation'] = "CWR"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C75", 'Designation'] = "CWR"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C70", 'Designation'] = "CWR"
@@ -104,6 +107,9 @@ def map_designations(proj_data):
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C40", 'Designation'] = "CWR"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C35", 'Designation'] = "CWR"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C33", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "NC4", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "NC2", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C97", 'Designation'] = "CWR"
     return proj_data     
     
 #Calculate and Display FTE counts 
