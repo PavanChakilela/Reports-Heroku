@@ -75,15 +75,32 @@ def file_selector(folder_path='./downloads'):
 def map_designations(proj_data):     
     pd.options.mode.chained_assignment = None  # default='warn'
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E80", 'Designation'] = "PAT"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E75", 'Designation'] = "PA"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E82", 'Designation'] = "PAT"     #Analyst Trainee considered as PAT
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E85", 'Designation'] = "PAT"     #Programmer Trainee considered as PAT
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E90", 'Designation'] = "PAT"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E75", 'Designation'] = "PA"      #Programmer considered as PA
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E70", 'Designation'] = "PA"   
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E65", 'Designation'] = "A"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E65", 'Designation'] = "A" 
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N65", 'Designation'] = "A"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E60", 'Designation'] = "SA"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E50", 'Designation'] = "M"        
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N60", 'Designation'] = "SA"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E50", 'Designation'] = "M"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N50", 'Designation'] = "M"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E45", 'Designation'] = "SM"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N45", 'Designation'] = "SM"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E40", 'Designation'] = "AD"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N40", 'Designation'] = "AD"
     proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E35", 'Designation'] = "D"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E33", 'Designation'] = "SD"  
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N35", 'Designation'] = "D"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E33", 'Designation'] = "SD"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N33", 'Designation'] = "SD"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C75", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C60", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C50", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C45", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C40", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C35", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C33", 'Designation'] = "CWR"
     return proj_data     
     
 #Calculate and Display FTE counts 
@@ -138,18 +155,20 @@ def cal_pie_percentages(proj_FTE_matrix, location):
     #AD
     #D
     #SD
+    #CWR
     #TOTAL
 def display_FTE_designation_split(proj_data):    
-    proj_FTE_matrix = pd.DataFrame({'Offshore' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 'Onsite' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], \
-                                    'TOTAL' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]})
+    proj_FTE_matrix = pd.DataFrame({'Offshore' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], \
+                                      'Onsite' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], \
+                                       'TOTAL' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]})
     
     # round to two decimal places in python pandas 
     pd.set_option('precision', 2)   
     
-    proj_FTE_matrix['Designation'] = "PAT PA A SA M SM AD D SD TOTAL".split()
+    proj_FTE_matrix['Designation'] = "PAT PA A SA M SM AD D SD CWR TOTAL".split()
     proj_FTE_matrix.set_index('Designation', inplace=True)
     
-    designation_list = ["PAT", "PA", "A", "SA", "M", "SM", "AD", "D", "SD", "TOTAL"]
+    designation_list = ["PAT", "PA", "A", "SA", "M", "SM", "AD", "D", "SD", "CWR", "TOTAL"]
     location_list = ["Offshore", "Onsite"]
     
     #Per each Designation & Location
@@ -456,6 +475,7 @@ def display_trends(proj_data, proj_FTE_matrix):
     #pivot_proj_FTE.rename(columns = {'Allocation Percentage':'FTE'}, inplace = True)
     #pivot_proj_FTE["FTE"] = pivot_proj_FTE["FTE"]/100.0
     
+    pivot_proj_FTE_count2.replace(np.nan,0.0)
     cm2 = sns.light_palette("navy", as_cmap=True)
     st.dataframe(pivot_proj_FTE_count2.style.background_gradient(cmap=cm2))
     
