@@ -11,13 +11,14 @@ from io import BytesIO
 import xlrd
 from datetime import datetime
 
-# To Improve speed and cache data
+# Open CSV (unsed currently)
 @st.cache(persist=True, allow_output_mutation=True)
 def explore_data_csv(dataset):
     df = pd.read_csv(dataset)
     dataset.seek(0)
     return df
        
+#select specific sheet from the excel for processing
 def select_sheet_excel(my_datafile, sheets, key):
     #for i in range(len(sheets)):
     #    df = pd.read_excel(my_datafile, sheet_name = sheets[i])
@@ -34,7 +35,7 @@ def explore_data(my_datafile):
     sheets = all_sheet.sheet_names
     return sheets  
     
-# To Improve speed and cache data
+# Open Excel and Select specific sheets in an excel for processing
 def file_excel_explore_data(my_datafile, key):
     sheets = explore_data(my_datafile)   
         
@@ -70,6 +71,12 @@ def file_selector(folder_path='./downloads'):
 	filenames = os.listdir(folder_path)
 	selected_filename = st.selectbox('Select a file', filenames)
 	return os.path.join(folder_path, selected_filename)
+       
+#Convert to FTE from Allocation %    
+def conv_alloc_FTE(proj_data):     
+    proj_data['FTE'] = proj_data['Allocation Percentage']/100.0
+
+    return proj_data     
     
 #Map Designations 
 def map_designations(proj_data):     
@@ -113,7 +120,8 @@ def map_designations(proj_data):
     return proj_data     
     
 #Calculate and Display FTE counts 
-def display_FTE_count(proj_data):           
+def display_FTE_count(proj_data):      
+    
     c1,c2,c3, c4 = st.beta_columns([1.2,1,1,1])
             
     with c1:
@@ -122,17 +130,17 @@ def display_FTE_count(proj_data):
 
     with c2:
         with st.beta_expander("Total FTE"):
-            st.write(proj_data['Allocation Percentage'].sum()/100.0)
+            st.write(proj_data['FTE'].sum().round(2))
 
     with c3:
         with st.beta_expander("Onsite FTE"):
             on_filter = (proj_data['Offshore/Onsite'] == 'Onsite')
-            st.write(proj_data[on_filter]['Allocation Percentage'].sum()/100.0) 
+            st.write(proj_data[on_filter]['FTE'].sum().round(2)) 
 
     with c4:
         with st.beta_expander("Offshore FTE"):
             off_filter = (proj_data['Offshore/Onsite'] == 'Offshore')
-            st.write(proj_data[off_filter]['Allocation Percentage'].sum()/100.0)
+            st.write(proj_data[off_filter]['FTE'].sum().round(2))
     return proj_data  
 
 def get_new_labels(sizes, labels):
@@ -184,15 +192,15 @@ def display_FTE_designation_split(proj_data):
     for designation in designation_list:
         for location in location_list:
             des_filter = (proj_data['Designation'] == designation) & (proj_data['Offshore/Onsite'] == location)
-            proj_FTE_matrix.loc[designation,location] = proj_data[des_filter]['Allocation Percentage'].sum()/100.0
+            proj_FTE_matrix.loc[designation,location] = proj_data[des_filter]['FTE'].sum()
     
     #Total Offshore
     des_filter = (proj_data['Offshore/Onsite'] == 'Offshore')
-    proj_FTE_matrix.loc['TOTAL','Offshore'] = proj_data[des_filter]['Allocation Percentage'].sum()/100.0
+    proj_FTE_matrix.loc['TOTAL','Offshore'] = proj_data[des_filter]['FTE'].sum()
         
     #Total Onsite    
     des_filter = (proj_data['Offshore/Onsite'] == 'Onsite')
-    proj_FTE_matrix.loc['TOTAL','Onsite'] = proj_data[des_filter]['Allocation Percentage'].sum()/100.0
+    proj_FTE_matrix.loc['TOTAL','Onsite'] = proj_data[des_filter]['FTE'].sum()
 
     #Total Column (sum of Offshore & Onsite rows)
     proj_FTE_matrix.loc[:,'TOTAL'] = proj_FTE_matrix.loc[:,'Offshore'] + proj_FTE_matrix.loc[:,'Onsite']
@@ -339,7 +347,7 @@ def filter_specific_criteria(proj_data, proj2_data):
             proj2_data = proj2_data[proj2_filter]
                      
     #Display Filtered Dataframe
-    st.dataframe(proj2_data[['Associate Id', 'Associate Name', 'Designation', 'Project Name', 'Allocation Percentage', 'Offshore/Onsite', 'Department Name', 'Start Date', 'End Date', 'Supervisor Name']], height=200)
+    st.dataframe(proj2_data[['Associate Id', 'Associate Name', 'Designation', 'Project Name', 'FTE', 'Offshore/Onsite', 'Department Name', 'Start Date', 'End Date', 'Supervisor Name']], height=200)
     
     return proj_data, proj2_data
     
@@ -484,8 +492,8 @@ def display_trends(proj_data, proj_FTE_matrix):
     #pivot_proj_FTE.rename(columns = {'Allocation Percentage':'FTE'}, inplace = True)
     #pivot_proj_FTE["FTE"] = pivot_proj_FTE["FTE"]/100.0
     
-    pivot_proj_FTE_count2.replace(np.nan,0.0)
-    cm2 = sns.light_palette("navy", as_cmap=True)
+    pivot_proj_FTE_count2.replace(np.nan,0.0, inplace=True)
+    cm2 = sns.light_palette("green", as_cmap=True)
     st.dataframe(pivot_proj_FTE_count2.style.background_gradient(cmap=cm2))
     
     #extend to % FTE per each row
@@ -500,7 +508,7 @@ def display_trends(proj_data, proj_FTE_matrix):
     
     #convert all values into 100%    
     pivot_proj_FTE_pct2 = pivot_proj_FTE_pct2[:] * 100
-    cm3 = sns.light_palette("navy", as_cmap=True)
+    cm3 = sns.light_palette("green", as_cmap=True)
     st.dataframe(pivot_proj_FTE_pct2.style.background_gradient(cmap=cm3))
     
     df = pivot_proj_FTE_count2  # FTE count
@@ -510,24 +518,29 @@ def display_trends(proj_data, proj_FTE_matrix):
     st.markdown(get_table_download_link(pivot_proj_FTE_count2, proj_data, 'Pivot-%-FTE', 'OverallFTE', 'FTE-%-Pivot', pivot_proj_FTE_pct2), unsafe_allow_html=True)
 
     all_columns_names = df.columns.tolist()
+    all_columns_names.remove('FTETotal')
     type_of_plot = st.selectbox("Select the Type of Plot for FTE Trend#", ["barh", "bar", "line", "area"])
     selected_column_names = st.multiselect('Select Columns To Plot', all_columns_names, default="A", key="tre1")
     
-    st.success("Generating A Customizable Plot of: {} for :: {}".format(type_of_plot,selected_column_names))
+    st.success("Customizable Plot (1. FTE-Count-View) & (2. FTE % View) of: {} for :: {}".format(type_of_plot,selected_column_names))
     
     c1,c2 = st.beta_columns([1,1])
-    
+            
     #Display 
     with c1:
-        fig1, axs = plt.subplots()
+        fig, axs = plt.subplots()
+        #fig = plt.figure()
         plt.title("FTE Trend Plots")
         plt.ylabel("FTE count#")
-        custom_plot = df[selected_column_names]
-        #plt.setp(autotexts, size='x-small')
+        
+        #Remove FTETotal Row for FTE count - to provide better readability in the graphs 
+        df3 = df[:-1]
+
+        custom_plot = df3[selected_column_names]
         st.write(custom_plot.plot(kind=type_of_plot))
         st.set_option('deprecation.showPyplotGlobalUse', False)
         st.pyplot()
-    
+        
     #Display 
     with c2:
         fig1, axs = plt.subplots()
@@ -538,12 +551,137 @@ def display_trends(proj_data, proj_FTE_matrix):
             if column == 'FTETotal':
                 selected_column_names.remove('FTETotal')
         custom_plot = df2[selected_column_names]
-        #plt.setp(autotexts, size='x-small')
         st.write(custom_plot.plot(kind=type_of_plot))
         st.set_option('deprecation.showPyplotGlobalUse', False)
         st.pyplot()
+     
+#                       Offshore    Onsite
+#   A-
+#   SA+
+#   Current_SPAN
+#   Target_Conversion
+#   Revised_SPAN
+def span_details(proj_data, proj_FTE_matrix):     
     
+    proj_SPAN_matrix = pd.DataFrame({'Offshore' : [0.0, 0.0, 0.0, 0.0, 0.0], \
+                                      'Onsite'  : [0.0, 0.0, 0.0, 0.0, 0.0], })
+    
+    # round to two decimal places in python pandas 
+    pd.set_option('precision', 2)   
+    
+    proj_SPAN_matrix['typeDesignation'] = "A- SA+ Current_SPAN Target_Conversion Revised_SPAN".split()
+    proj_SPAN_matrix.set_index('typeDesignation', inplace=True)
+    
+    location_list = ["Offshore", "Onsite"]
+    target_span = dict({"Offshore" : 3, "Onsite" : 0.25})
+    
+    for location in location_list:
+        proj_SPAN_matrix.loc["A-",location] = proj_FTE_matrix.loc["PAT"][location] + \
+                                                proj_FTE_matrix.loc["PA"][location] + \
+                                                proj_FTE_matrix.loc["A"][location]
+                                                
+        proj_SPAN_matrix.loc["SA+",location] = proj_FTE_matrix.loc["SA"][location] + \
+                                                 proj_FTE_matrix.loc["M"][location] + \
+                                                 proj_FTE_matrix.loc["SM"][location] + \
+                                                 proj_FTE_matrix.loc["AD"][location] + \
+                                                 proj_FTE_matrix.loc["D"][location] + \
+                                                 proj_FTE_matrix.loc["SD"][location] + \
+                                                 proj_FTE_matrix.loc["CWR"][location]
+                                                 
+        x = proj_SPAN_matrix.loc["A-",location]
+        y = proj_SPAN_matrix.loc["SA+",location]
+        
+        proj_SPAN_matrix.loc["Current_SPAN",location] = x / y
+        
+        target = target_span.get(location)
+    
+        #Considering only Designation SWAP as the lever
+        proj_SPAN_matrix.loc["Target_Conversion",location] = (target * y - x)/(1 + target)
+        
+        conv_target = (target * y - x)/(1 + target)
+        
+        #Considering only Designation SWAP as the lever
+        proj_SPAN_matrix.loc["Revised_SPAN",location] = (x + conv_target)/(y - conv_target)
+        
+                                                
+    c1, c2, c3 = st.beta_columns([1.8,1, 1])
+    
+    #Display FTE Designation Matrix View 
+    with c1:
+        cm = sns.light_palette("green", as_cmap=True) 
+        st.success("Current SPAN;")
+        st.write("Target_Conv assumed ONLY from SA+ to A-")
+        st.dataframe(proj_SPAN_matrix.style.background_gradient(cmap=cm))
+        
+        proj_SPAN_rev_matrix = proj_SPAN_matrix 
+        #cm = sns.light_palette("green", as_cmap=True) 
+        #st.success("Revised SPAN Based on Your Levers")
+        #st.dataframe(proj_SPAN_rev_matrix.style.background_gradient(cmap=cm))        
+
+    with c2:
+        st.write("Apply Offshore Levers")
+        off_promotion = st.number_input("Promotion (A to SA)",0.0,10.0, step = 1.0, key="oflev1")
+        off_a_rampup = st.number_input("A- RampUp",0.0,20.0, step = 1.0, key="oflev2")
+        off_a_rampdown = st.number_input("A- RampDown",0.0,20.0, step = 1.0, key="oflev3")
+        off_sa_rampup = st.number_input("SA+ RampUp",0.0,20.0, step = 1.0, key="oflev4")
+        off_sa_rampdown = st.number_input("SA+ RampDown",0.0,20.0, step = 1.0, key="oflev5")
+        
+        location = "Offshore"
+        x = proj_SPAN_rev_matrix.loc["A-",location]
+        y = proj_SPAN_rev_matrix.loc["SA+",location]
+        
+        x = (x - off_promotion + off_a_rampup  - off_a_rampdown)
+        y = (y + off_promotion + off_sa_rampup - off_sa_rampdown)
+        
+        proj_SPAN_rev_matrix.loc["A-",location] = x
+        proj_SPAN_rev_matrix.loc["SA+",location] = y
+        proj_SPAN_rev_matrix.loc["Current_SPAN",location] = x / y
+        
+        target = target_span.get(location)
+    
+        #Considering only Designation SWAP as the lever
+        proj_SPAN_rev_matrix.loc["Target_Conversion",location] = (target * y - x)/(1 + target)
+        
+        conv_target = (target * y - x)/(1 + target)
+        
+        #Considering only Designation SWAP as the lever
+        proj_SPAN_rev_matrix.loc["Revised_SPAN",location] = (x + conv_target)/(y - conv_target)
+        
+    with c3:
+        st.write("Apply Onsite Levers")
+        on_promotion = st.number_input("Promotion (A to SA)",0.0,10.0, step = 1.0, key="onlev1")
+        on_a_rampup = st.number_input("A- RampUp",0.0,20.0, step = 1.0, key="onlev2")
+        on_a_rampdown = st.number_input("A- RampDown",0.0,20.0, step = 1.0, key="onlev3")
+        on_sa_rampup = st.number_input("SA+ RampUp",0.0,20.0, step = 1.0, key="onlev4")
+        on_sa_rampdown = st.number_input("SA+ RampDown",0.0,20.0, step = 1.0, key="onlev5")
+        
+        location = "Onsite"
+        x = proj_SPAN_rev_matrix.loc["A-",location]
+        y = proj_SPAN_rev_matrix.loc["SA+",location]
+        
+        x = (x - on_promotion + on_a_rampup  - on_a_rampdown)
+        y = (y + on_promotion + on_sa_rampup - on_sa_rampdown)
+        
+        proj_SPAN_rev_matrix.loc["A-",location] = x
+        proj_SPAN_rev_matrix.loc["SA+",location] = y
+        proj_SPAN_rev_matrix.loc["Current_SPAN",location] = x / y
+        
+        target = target_span.get(location)
+    
+        #Considering only Designation SWAP as the lever
+        proj_SPAN_rev_matrix.loc["Target_Conversion",location] = (target * y - x)/(1 + target)
+        
+        conv_target = (target * y - x)/(1 + target)
+        
+        #Considering only Designation SWAP as the lever
+        proj_SPAN_rev_matrix.loc["Revised_SPAN",location] = (x + conv_target)/(y - conv_target) 
+
+    with c1:
+        cm = sns.light_palette("green", as_cmap=True) 
+        st.success("Revised SPAN Based on Your Levers")
+        st.dataframe(proj_SPAN_rev_matrix.style.background_gradient(cmap=cm))        
    
+ 
 def main():
 
     html_temp = """
@@ -599,13 +737,16 @@ def main():
             
             #New dataframe of PROJ selected using multiselect
             proj_data = data[proj_filt1]
+            
+            #Convert to FTE from Allocation %   
+            proj_data = conv_alloc_FTE(proj_data)
                         
             #Map Designations   
             proj_data = map_designations(proj_data)        
             
             #Display project specific DataFrame for the selected List of Projects
             st.dataframe(proj_data[['Associate Id', 'Associate Name', 'Designation', 'Project Name', \
-            'Allocation Percentage', 'Offshore/Onsite', 'Department Name', 'Start Date', 'End Date', 'Supervisor Name']], height=200)
+            'FTE', 'Offshore/Onsite', 'Department Name', 'Start Date', 'End Date', 'Supervisor Name']], height=200)
                       
             #Calculate and Display FTE TOTAL counts               
             proj_data = display_FTE_count(proj_data)
@@ -630,10 +771,15 @@ def main():
                 #enable download as hyperlink
                 st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view'), unsafe_allow_html=True) 
 
-            #Plot line graphs
+            #Plot line graphs for FTE count & FTE % at each Designation level
             if st.checkbox("Interested in FTE Trends? (at Project level)"): 
                 st.info("Quick Summary table of FTE counts & percentages:")
-                display_trends(proj_data, proj_FTE_matrix)                
+                display_trends(proj_data, proj_FTE_matrix) 
+
+            #Plot line graphs
+            if st.checkbox("Interested in SPAN? (at Overall level)"): 
+                st.info("Quick Summary table of FTE counts & SPAN details:")
+                span_details(proj_data, proj_FTE_matrix)                
  
     elif choice == "Compare 2 versions":
         
