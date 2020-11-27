@@ -11,6 +11,9 @@ from io import BytesIO
 import xlrd
 from datetime import datetime
 
+# Database Functions
+from db_imis import *
+
 # Open CSV (unsed currently)
 @st.cache(persist=True, allow_output_mutation=True)
 def explore_data_csv(dataset):
@@ -64,7 +67,7 @@ def get_table_download_link(df1, df2, sh1, sh2, filename, df3=None):
     b64 = base64.b64encode(val)  # val looks like b'...' 
     n = datetime.now()
     filename_timestamp = f'{filename}_{n.year}_{n.month}_{n.day}_{n.hour}_{n.minute}_{n.second}.xlsx'
-    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename_timestamp}>Download as ({filename_timestamp}) file</a>' # decode b'abc' => abc    
+    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename_timestamp}>Download as **({filename_timestamp})** file</a>' # decode b'abc' => abc    
 
 #Still Pending ???
 def file_selector(folder_path='./downloads'):
@@ -74,49 +77,49 @@ def file_selector(folder_path='./downloads'):
        
 #Convert to FTE from Allocation %    
 def conv_alloc_FTE(proj_data):     
-    proj_data['FTE'] = proj_data['Allocation Percentage']/100.0
+    proj_data['FTE'] = proj_data['Allocation_Percentage']/100.0
 
     return proj_data     
     
 #Map Designations 
 def map_designations(proj_data):     
     pd.options.mode.chained_assignment = None  # default='warn'
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E80", 'Designation'] = "PAT"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E82", 'Designation'] = "PAT"     #Analyst Trainee considered as PAT
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E85", 'Designation'] = "PAT"     #Programmer Trainee considered as PAT
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E90", 'Designation'] = "PAT"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E75", 'Designation'] = "PA"      #Programmer considered as PA
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E70", 'Designation'] = "PA"   
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E65", 'Designation'] = "A" 
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N65", 'Designation'] = "A"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E60", 'Designation'] = "SA"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N60", 'Designation'] = "SA"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E50", 'Designation'] = "M"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N50", 'Designation'] = "M"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E45", 'Designation'] = "SM"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N45", 'Designation'] = "SM"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E40", 'Designation'] = "AD"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N40", 'Designation'] = "AD"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E35", 'Designation'] = "D"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N35", 'Designation'] = "D"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E33", 'Designation'] = "SD"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "N33", 'Designation'] = "SD"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E30", 'Designation'] = "SD"      #SBU Head - Practice considered as SD
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E25", 'Designation'] = "SD"      #SBU Head - MDU considered as SD
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "E20", 'Designation'] = "SD"      #SBU Leader - INS considered as SD
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C80", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C75", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C70", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C65", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C60", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C50", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C45", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C40", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C35", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C33", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "NC4", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "NC2", 'Designation'] = "CWR"
-    proj_data.loc[proj_data.loc[:, 'Grade Id'] == "C97", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E80", 'Designation'] = "PAT"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E82", 'Designation'] = "PAT"     #Analyst Trainee considered as PAT
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E85", 'Designation'] = "PAT"     #Programmer Trainee considered as PAT
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E90", 'Designation'] = "PAT"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E75", 'Designation'] = "PA"      #Programmer considered as PA
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E70", 'Designation'] = "PA"   
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E65", 'Designation'] = "A" 
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "N65", 'Designation'] = "A"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E60", 'Designation'] = "SA"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "N60", 'Designation'] = "SA"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E50", 'Designation'] = "M"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "N50", 'Designation'] = "M"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E45", 'Designation'] = "SM"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "N45", 'Designation'] = "SM"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E40", 'Designation'] = "AD"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "N40", 'Designation'] = "AD"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E35", 'Designation'] = "D"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "N35", 'Designation'] = "D"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E33", 'Designation'] = "SD"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "N33", 'Designation'] = "SD"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E30", 'Designation'] = "SD"      #SBU Head - Practice considered as SD
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E25", 'Designation'] = "SD"      #SBU Head - MDU considered as SD
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "E20", 'Designation'] = "SD"      #SBU Leader - INS considered as SD
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C80", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C75", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C70", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C65", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C60", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C50", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C45", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C40", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C35", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C33", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "NC4", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "NC2", 'Designation'] = "CWR"
+    proj_data.loc[proj_data.loc[:, 'Grade_Id'] == "C97", 'Designation'] = "CWR"
     return proj_data     
     
 #Calculate and Display FTE counts 
@@ -134,12 +137,12 @@ def display_FTE_count(proj_data):
 
     with c3:
         with st.beta_expander("Onsite FTE"):
-            on_filter = (proj_data['Offshore/Onsite'] == 'Onsite')
+            on_filter = (proj_data['Offshore_Onsite'] == 'Onsite')
             st.write(proj_data[on_filter]['FTE'].sum().round(2)) 
 
     with c4:
         with st.beta_expander("Offshore FTE"):
-            off_filter = (proj_data['Offshore/Onsite'] == 'Offshore')
+            off_filter = (proj_data['Offshore_Onsite'] == 'Offshore')
             st.write(proj_data[off_filter]['FTE'].sum().round(2))
     return proj_data  
 
@@ -191,15 +194,15 @@ def display_FTE_designation_split(proj_data):
     #Per each Designation & Location
     for designation in designation_list:
         for location in location_list:
-            des_filter = (proj_data['Designation'] == designation) & (proj_data['Offshore/Onsite'] == location)
+            des_filter = (proj_data['Designation'] == designation) & (proj_data['Offshore_Onsite'] == location)
             proj_FTE_matrix.loc[designation,location] = proj_data[des_filter]['FTE'].sum()
     
     #Total Offshore
-    des_filter = (proj_data['Offshore/Onsite'] == 'Offshore')
+    des_filter = (proj_data['Offshore_Onsite'] == 'Offshore')
     proj_FTE_matrix.loc['TOTAL','Offshore'] = proj_data[des_filter]['FTE'].sum()
         
     #Total Onsite    
-    des_filter = (proj_data['Offshore/Onsite'] == 'Onsite')
+    des_filter = (proj_data['Offshore_Onsite'] == 'Onsite')
     proj_FTE_matrix.loc['TOTAL','Onsite'] = proj_data[des_filter]['FTE'].sum()
 
     #Total Column (sum of Offshore & Onsite rows)
@@ -275,20 +278,20 @@ def filter_specific_criteria(proj_data, proj2_data):
     filt_supervisor = []
     for menu_2 in menu_list:
     
-        menu_Location = proj2_data['Offshore/Onsite'].unique().tolist()
+        menu_Location = proj2_data['Offshore_Onsite'].unique().tolist()
         menu_Designation = proj2_data['Designation'].unique().tolist()  
-        menu_Department = proj2_data['Department Name'].unique().tolist()
-        menu_StartDate = proj2_data['Start Date'].unique().tolist()
-        menu_EndDate = proj2_data['End Date'].unique().tolist()
-        menu_associate_name = proj2_data['Associate Name'].unique().tolist()
-        menu_Supervisor = proj2_data['Supervisor Name'].unique().tolist()
+        menu_Department = proj2_data['Department_Name'].unique().tolist()
+        menu_StartDate = proj2_data['Start_Date'].unique().tolist()
+        menu_EndDate = proj2_data['End_Date'].unique().tolist()
+        menu_associate_name = proj2_data['Associate_Name'].unique().tolist()
+        menu_Supervisor = proj2_data['Supervisor_Name'].unique().tolist()
         
         if menu_2 == "Location":
             st.subheader("Chose Location")
             filt_loc = st.multiselect("",menu_Location, key="loc")
             
             #Apply Filter
-            proj2_filter = (proj2_data['Offshore/Onsite'].isin(filt_loc))
+            proj2_filter = (proj2_data['Offshore_Onsite'].isin(filt_loc))
             #New filtered PROJ2
             proj2_data = proj2_data[proj2_filter]
                             
@@ -306,7 +309,7 @@ def filter_specific_criteria(proj_data, proj2_data):
             filt_dep = st.multiselect("",menu_Department, key="dep")    
             
             #Apply Filter
-            proj2_filter = (proj2_data['Department Name'].isin(filt_dep))
+            proj2_filter = (proj2_data['Department_Name'].isin(filt_dep))
             #New filtered PROJ2
             proj2_data = proj2_data[proj2_filter]
             
@@ -315,7 +318,7 @@ def filter_specific_criteria(proj_data, proj2_data):
             filt_name = st.multiselect("",menu_associate_name, key="nam")    
             
             #Apply Filter
-            proj2_filter = (proj2_data['Associate Name'].isin(filt_name))
+            proj2_filter = (proj2_data['Associate_Name'].isin(filt_name))
             #New filtered PROJ2
             proj2_data = proj2_data[proj2_filter]   
 
@@ -324,7 +327,7 @@ def filter_specific_criteria(proj_data, proj2_data):
             filt_startdate = st.multiselect("",menu_StartDate, key="stdate")    
             
             #Apply Filter
-            proj2_filter = (proj2_data['Start Date'].isin(filt_startdate))
+            proj2_filter = (proj2_data['Start_Date'].isin(filt_startdate))
             #New filtered PROJ2
             proj2_data = proj2_data[proj2_filter]   
 
@@ -333,7 +336,7 @@ def filter_specific_criteria(proj_data, proj2_data):
             filt_enddate = st.multiselect("",menu_EndDate, key="endate")    
             
             #Apply Filter
-            proj2_filter = (proj2_data['End Date'].isin(filt_enddate))
+            proj2_filter = (proj2_data['End_Date'].isin(filt_enddate))
             #New filtered PROJ2
             proj2_data = proj2_data[proj2_filter]   
 
@@ -342,12 +345,13 @@ def filter_specific_criteria(proj_data, proj2_data):
             filt_supervisor = st.multiselect("",menu_Supervisor, key="sup")    
             
             #Apply Filter
-            proj2_filter = (proj2_data['Supervisor Name'].isin(filt_supervisor))
+            proj2_filter = (proj2_data['Supervisor_Name'].isin(filt_supervisor))
             #New filtered PROJ2
             proj2_data = proj2_data[proj2_filter]
                      
     #Display Filtered Dataframe
-    st.dataframe(proj2_data[['Associate Id', 'Associate Name', 'Designation', 'Project Name', 'FTE', 'Offshore/Onsite', 'Department Name', 'Start Date', 'End Date', 'Supervisor Name']], height=200)
+    st.dataframe(proj2_data[['Associate_Id', 'Associate_Name', 'Designation', 'Project_Name', 'FTE', 'Offshore_Onsite', \
+                             'Department_Name', 'Start_Date', 'End_Date', 'Supervisor_Name']], height=200)
     
     return proj_data, proj2_data
     
@@ -375,7 +379,7 @@ def dataframe_difference(df1, df2, which=None):
 #Check if "FTE view of Merged 2 sheets (MBM & BTM)"
 def file_upload_2(data1):    
     st.sidebar.warning("Do you want to Merge with 2nd IMIS file?")
-    my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in XLSX format", type=["xlsx"])
+    my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in XLSX format", type=["xlsx"], key="file2")
     data3=data1
     if my_dataset2 is not None:
         #Open IMIS file2
@@ -383,11 +387,11 @@ def file_upload_2(data1):
                 
         #Append this file2 IMIS contents
         #data3 = data1.append(data2, ignore_index=True, sort=False) 
-        data3 = pd.concat([data1, data2], sort=False) 
-    return data3  
+        data3 = pd.concat([data1, data2], sort=False, ignore_index=True) 
+    return data3, my_dataset2  
 
 def pipeline_opp_handling():
-    pipe_dataset1 = st.sidebar.file_uploader("Upload Bulk Upload File in XLSX format", type=["xlsx"])
+    pipe_dataset1 = st.sidebar.file_uploader("Upload Bulk Upload File in XLSX format", type=["xlsx"], key="opp1")
     if pipe_dataset1 is not None:
 
         #Open PipeLine Opportunity File for Bulk Upload
@@ -479,17 +483,17 @@ def display_trends(proj_data, proj_FTE_matrix):
 
     #Generate pivot for FTE COUNTS
     pivot_proj_FTE_count = pd.DataFrame(proj_data)
-    pivot_proj_FTE_count.rename(columns = {'Project Name':'ProjectName'}, inplace = True)
-    pivot_proj_FTE_count["FTE"] = pivot_proj_FTE_count["Allocation Percentage"]/100.0
+    pivot_proj_FTE_count.rename(columns = {'Project_Name':'ProjectName'}, inplace = True)
+    pivot_proj_FTE_count["FTE"] = pivot_proj_FTE_count["Allocation_Percentage"]/100.0
         
     #use cross tab for % normalization at index level i.e. project-name
     pivot_proj_FTE_count2 = pd.crosstab([pivot_proj_FTE_count.ProjectName], \
                                         columns=pivot_proj_FTE_count.Designation, \
                                         values=pivot_proj_FTE_count.FTE, aggfunc=sum, margins=True, margins_name="FTETotal")
     
-    #pivot_proj_FTE = pd.pivot_table(proj_data, index=["Project Name"], columns=["Designation"], \
-    #                                           values=["Allocation Percentage"], aggfunc='sum',  margins=True)                                         
-    #pivot_proj_FTE.rename(columns = {'Allocation Percentage':'FTE'}, inplace = True)
+    #pivot_proj_FTE = pd.pivot_table(proj_data, index=["Project_Name"], columns=["Designation"], \
+    #                                           values=["Allocation_Percentage"], aggfunc='sum',  margins=True)                                         
+    #pivot_proj_FTE.rename(columns = {'Allocation_Percentage':'FTE'}, inplace = True)
     #pivot_proj_FTE["FTE"] = pivot_proj_FTE["FTE"]/100.0
     
     pivot_proj_FTE_count2.replace(np.nan,0.0, inplace=True)
@@ -498,8 +502,8 @@ def display_trends(proj_data, proj_FTE_matrix):
     
     #extend to % FTE per each row
     pivot_proj_FTE_pct = pd.DataFrame(proj_data)
-    pivot_proj_FTE_pct.rename(columns = {'Project Name':'ProjectName'}, inplace = True)
-    pivot_proj_FTE_pct["FTE"] = pivot_proj_FTE_pct["Allocation Percentage"]/100.0
+    pivot_proj_FTE_pct.rename(columns = {'Project_Name':'ProjectName'}, inplace = True)
+    pivot_proj_FTE_pct["FTE"] = pivot_proj_FTE_pct["Allocation_Percentage"]/100.0
                                                   
     #use cross tab for % normalization at index level i.e. project-name
     pivot_proj_FTE_pct2 = pd.crosstab([pivot_proj_FTE_pct.ProjectName], \
@@ -519,10 +523,10 @@ def display_trends(proj_data, proj_FTE_matrix):
 
     all_columns_names = df.columns.tolist()
     all_columns_names.remove('FTETotal')
-    type_of_plot = st.selectbox("Select the Type of Plot for FTE Trend#", ["barh", "bar", "line", "area"])
+    type_of_plot = st.selectbox("Select the Type of Plot for ***FTE Trend#***", ["barh", "bar", "line", "area"])
     selected_column_names = st.multiselect('Select Columns To Plot', all_columns_names, default="A", key="tre1")
     
-    st.success("Customizable Plot (1. FTE-Count-View) & (2. FTE % View) of: {} for :: {}".format(type_of_plot,selected_column_names))
+    st.success("Customizable Plot (1. **FTE-Count-View**) & (2. **FTE % View**) of: {} for :: {}".format(type_of_plot,selected_column_names))
     
     c1,c2 = st.beta_columns([1,1])
             
@@ -609,7 +613,7 @@ def span_details(proj_data, proj_FTE_matrix):
     #Display FTE Designation Matrix View 
     with c1:
         cm = sns.light_palette("green", as_cmap=True) 
-        st.success("Current SPAN;")
+        st.success("***Current*** SPAN;")
         st.write("Target_Conv assumed ONLY from SA+ to A-")
         st.dataframe(proj_SPAN_matrix.style.background_gradient(cmap=cm))
         
@@ -678,10 +682,83 @@ def span_details(proj_data, proj_FTE_matrix):
 
     with c1:
         cm = sns.light_palette("green", as_cmap=True) 
-        st.success("Revised SPAN Based on Your Levers")
+        st.success("***Revised*** SPAN Based on Your Levers")
         st.dataframe(proj_SPAN_rev_matrix.style.background_gradient(cmap=cm))        
-   
- 
+    
+def view_FTE_multi_purpose(data):       
+    #Project Specific
+    st.success("Show Project specific **Associate, FTE & Pyramid** details")
+    
+    #Remove duplicate project-ids
+    #project_list = data['Project_Id'].unique().tolist()
+    project_list = data['Project_Name'].unique().tolist()
+    
+    #selection based on projects list
+    proj_wish = st.radio("All Projects / Select MutiProjects?",("All","SelectedProject(s)"))
+    if proj_wish == "All":
+        project_id_list = project_list
+    else:     
+        project_id_list = st.multiselect("Pls select project(s)", project_list, key="fil1")
+    
+    #List of projects for which query is needed
+    proj_filt1 = data['Project_Name'].isin(project_id_list)
+    
+    #New dataframe of PROJ selected using multiselect
+    proj_data = data[proj_filt1]
+    
+    #Convert to FTE from Allocation %   
+    proj_data = conv_alloc_FTE(proj_data)
+                
+    #Map Designations   
+    proj_data = map_designations(proj_data)        
+    
+    #Display project specific DataFrame for the selected List of Projects
+    st.dataframe(proj_data[['Associate_Id', 'Associate_Name', 'Designation', 'Project_Name', \
+    'FTE', 'Offshore_Onsite', 'Department_Name', 'Start_Date', 'End_Date', 'Supervisor_Name']], height=200)
+              
+    #Calculate and Display FTE TOTAL counts               
+    proj_data = display_FTE_count(proj_data)
+    
+    #DataFrame for Project FTE split
+    proj_data, proj_FTE_matrix = display_FTE_designation_split(proj_data)
+                                
+    #enable download as hyperlink
+    st.markdown(get_table_download_link(proj_FTE_matrix, proj_data, 'FTE1-Split', 'FTE1', 'FTE-view'), unsafe_allow_html=True)    
+       
+    #MultiSelect based on Location / Designation / Department / StartDate / EndDate / AssociateName / Supervisor
+    #New dataframe : PROJ2 before filter same as PROJ
+    proj2_data = proj_data
+    if st.checkbox("Filter based on Location, Designation, Department, StartDate, EndDate, AssociateName, Supervisor"): 
+        proj_data, proj2_data = filter_specific_criteria(proj_data, proj2_data)
+        
+        #Calculate and Display FTE TOTAL counts               
+        proj2_data = display_FTE_count(proj2_data)
+                        
+        proj2_data, proj_FTE_matrix = display_FTE_designation_split(proj2_data)
+                            
+        #enable download as hyperlink
+        st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view'), unsafe_allow_html=True) 
+
+    #Plot line graphs
+    if st.checkbox("Interested in SPAN?"): 
+        st.info("Quick Summary table of **FTE counts & SPAN** details:")
+        span_details(proj_data, proj_FTE_matrix)    
+        
+    #Plot line graphs for FTE count & FTE % at each Designation level
+    if st.checkbox("Interested in FTE Trends? (at Project level)"): 
+        st.info("Quick Summary table of **FTE counts & percentages**:")
+        display_trends(proj_data, proj_FTE_matrix)         
+    
+#@st.cache(persist=True, allow_output_mutation=True, hash_funcs={Connection: id})
+def clean_db_fn(conn):
+    #delete all existing data
+    delete_all_upload_report(conn)
+    delete_data_db(conn)
+    
+    #Displat all as DataFrame
+    emp_df = get_all_data(conn)
+    return emp_df    
+    
 def main():
 
     html_temp = """
@@ -691,7 +768,7 @@ def main():
 		"""
     st.markdown(html_temp.format('royalblue','white'),unsafe_allow_html=True)
     
-    menu = ["Project FTE View", "Compare 2 versions", "Pipeline Opp", "RevRec", "About"]
+    menu = ["Project FTE View", "Compare 2 versions", "Pipeline Opp", "RevRec", "AdminUpload", "About"]
     choice = st.sidebar.selectbox("Select Option",menu)
 
     if choice == "Project FTE View":
@@ -699,97 +776,65 @@ def main():
         html_temp2 = """ <h3 style="color:{};text-align:center;">FTE View </h3> """
         st.markdown(html_temp2.format('royalblue','white'),unsafe_allow_html=True)
         
-        my_dataset = st.sidebar.file_uploader("Upload IMIS Allocation File in XLSX format", type=["xlsx"])
+        #Check if we want to view from existing DB OR New File Upload
+        option_data_view = st.sidebar.radio("ViewFromDB / UploadManually?",("DB","Upload"))
+        if option_data_view == "DB":
+            st.write("Initiating DB connection...")
+            conn = get_connection(URI_SQLITE_DB)
+            init_db(conn)
+            st.write("DB connection established!")
+            
+            #Display all as DataFrame
+            emp_df = get_all_data(conn)
+            upload_Rep = get_all_upload_report(conn)          
+            
+            #Display only if DB data is available
+            if len(emp_df) > 0:
+                st.info(f"Display current database from the file ==> ***{upload_Rep['File_Name'][0]}***!")
+                with st.beta_expander('Complete View',expanded=False):
+                    st.dataframe(emp_df) 
+
+                #Show FTE Pyramid, Trends, SPAN details.    
+                view_FTE_multi_purpose(emp_df)    
+            else:
+                st.warning("No data from DB. Pls go for Upload Options...")
         
-        if my_dataset is not None:
-
-            #Open IMIS file
-            data1 = file_excel_explore_data(my_dataset, key="FTEsh1")
-            
-            #Default Dataframe
-            data = data1
-            
-            #Check if "FTE view of Merged 2 sheets (MBM & BTM)" & append to DATA
-            data = file_upload_2(data1)
-            
-            #All Projects, All Associates as-is dataframe
-            st.info("Refer Original records of ALL Projects / Associates details")
+        elif option_data_view == "Upload":
+            my_dataset = st.sidebar.file_uploader("Upload IMIS Allocation File in XLSX format", type=["xlsx"], key="upload1")
+        
+            if my_dataset is not None:
+                #Open IMIS file
+                data1 = file_excel_explore_data(my_dataset, key="FTEsh1")
                 
-            with st.beta_expander('Complete View (as-is IMIS report)',expanded=False):
-                st.dataframe(data)
+                #Default Dataframe
+                data = data1
                 
-            #Project Specific
-            st.success("Show Project specific Associate, FTE & Pyramid details")
-            
-            #Remove duplicate project-ids
-            #project_list = data['Project Id'].unique().tolist()
-            project_list = data['Project Name'].unique().tolist()
-            
-            #selection based on projects list
-            proj_wish = st.radio("All Projects / Select MutiProjects?",("All","SelectedProject(s)"))
-            if proj_wish == "All":
-                project_id_list = project_list
-            else:     
-                project_id_list = st.multiselect("Pls select project(s)", project_list, key="fil1")
-            
-            #List of projects for which query is needed
-            proj_filt1 = data['Project Name'].isin(project_id_list)
-            
-            #New dataframe of PROJ selected using multiselect
-            proj_data = data[proj_filt1]
-            
-            #Convert to FTE from Allocation %   
-            proj_data = conv_alloc_FTE(proj_data)
-                        
-            #Map Designations   
-            proj_data = map_designations(proj_data)        
-            
-            #Display project specific DataFrame for the selected List of Projects
-            st.dataframe(proj_data[['Associate Id', 'Associate Name', 'Designation', 'Project Name', \
-            'FTE', 'Offshore/Onsite', 'Department Name', 'Start Date', 'End Date', 'Supervisor Name']], height=200)
-                      
-            #Calculate and Display FTE TOTAL counts               
-            proj_data = display_FTE_count(proj_data)
-            
-            #DataFrame for Project FTE split
-            proj_data, proj_FTE_matrix = display_FTE_designation_split(proj_data)
-                                        
-            #enable download as hyperlink
-            st.markdown(get_table_download_link(proj_FTE_matrix, proj_data, 'FTE1-Split', 'FTE1', 'FTE-view'), unsafe_allow_html=True)    
-               
-            #MultiSelect based on Location / Designation / Department / StartDate / EndDate / AssociateName / Supervisor
-            #New dataframe : PROJ2 before filter same as PROJ
-            proj2_data = proj_data
-            if st.checkbox("Filter based on Location, Designation, Department, StartDate, EndDate, AssociateName, Supervisor"): 
-                proj_data, proj2_data = filter_specific_criteria(proj_data, proj2_data)
+                #Check if "FTE view of Merged 2 sheets (MBM & BTM)" & append to DATA
+                data, filename2 = file_upload_2(data1)
                 
-                #Calculate and Display FTE TOTAL counts               
-                proj2_data = display_FTE_count(proj2_data)
-                                
-                proj2_data, proj_FTE_matrix = display_FTE_designation_split(proj2_data)
-                                    
-                #enable download as hyperlink
-                st.markdown(get_table_download_link(proj_FTE_matrix, proj2_data, 'FTE2-Split', 'FTE2', 'FTE-Filter-view'), unsafe_allow_html=True) 
-
-            #Plot line graphs for FTE count & FTE % at each Designation level
-            if st.checkbox("Interested in FTE Trends? (at Project level)"): 
-                st.info("Quick Summary table of FTE counts & percentages:")
-                display_trends(proj_data, proj_FTE_matrix) 
-
-            #Plot line graphs
-            if st.checkbox("Interested in SPAN? (at Overall level)"): 
-                st.info("Quick Summary table of FTE counts & SPAN details:")
-                span_details(proj_data, proj_FTE_matrix)                
+                #All Projects, All Associates as-is dataframe
+                st.info("Refer Original records of ALL Projects / Associates details")
+        
+                with st.beta_expander('Complete View (as-is IMIS report)',expanded=False):
+                    st.dataframe(data)
+                    
+                #Replace Column Names
+                data.columns = data.columns.str.replace(' ','_')
+                # renaming the column 
+                data.rename(columns = {"Offshore/Onsite": "Offshore_Onsite"}, inplace = True)                    
+                
+                #Show FTE Pyramid, Trends, SPAN details.    
+                view_FTE_multi_purpose(data)
  
     elif choice == "Compare 2 versions":
         
-        my_dataset1 = st.sidebar.file_uploader("Upload 1st IMIS Allocation File in CSV format", type=["csv"])
+        my_dataset1 = st.sidebar.file_uploader("Upload 1st IMIS Allocation File in CSV format", type=["csv"], key="ver1")
         if my_dataset1 is not None:
 
             #Open IMIS file1
             data1 = file_excel_explore_data(my_dataset1, key="Comparesh1")
 
-        my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["csv"])
+        my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["csv"], key="ver1")
         if my_dataset2 is not None:
 
             #Open IMIS file2
@@ -817,7 +862,79 @@ def main():
         html_temp2 = """ <h3 style="color:{};text-align:center;">PipeLine Opportunity View </h3> """
         st.markdown(html_temp2.format('royalblue','white'),unsafe_allow_html=True)
         
-        pipeline_opp_handling()        
+        pipeline_opp_handling()    
+
+    elif choice == "AdminUpload":
+        html_temp2 = """ <h3 style="color:{};text-align:center;">File Upload View </h3> """
+        st.markdown(html_temp2.format('royalblue','white'),unsafe_allow_html=True)
+        
+        st.write("Initiating DB connection...")
+        conn = get_connection(URI_SQLITE_DB)
+        init_db(conn)
+        init_db_upload_report(conn)
+        st.write("DB connection established!")
+        
+        c1,c2 = st.beta_columns([2, 1])
+        
+        with c1:
+            upload_Rep = get_all_upload_report(conn)
+            st.info("History of Files Uploaded...")
+            st.dataframe(upload_Rep)         
+        with c2:
+            #Displat all as DataFrame
+            emp_df = get_all_data(conn)
+            st.info("Display current database!")
+            st.dataframe(emp_df, height=120)     
+
+        #Clean DB and refresh
+        st.success("**Clean/Purge Database**")
+        if st.checkbox("Clean DB?"):
+            emp_df = clean_db_fn(conn)
+            st.write("Clean DB done!")
+            st.dataframe(emp_df)
+                
+        imis_file = st.sidebar.file_uploader("Upload IMIS Allocation File in XLSX format", type=["xlsx"], key="AdmUp1")
+        if imis_file is not None:
+
+            #Open IMIS file
+            imis_df1 = file_excel_explore_data(imis_file, key="IMIS-UP1")
+            
+            #Default Dataframe
+            imis_df = imis_df1
+                
+            #Check if "FTE view of Merged 2 sheets (MBM & BTM)" & append to DATA
+            #imis_file2 = imis_file
+            imis_df, imis_file2 = file_upload_2(imis_df1)            
+                      
+            #Replace Column Names
+            imis_df.columns = imis_df.columns.str.replace(' ','_')
+            # renaming the column 
+            imis_df.rename(columns = {"Offshore/Onsite": "Offshore_Onsite"}, inplace = True) 
+            st.dataframe(imis_df)
+                                    
+            if st.checkbox("Save IMIS data to DB? (Clean DB is mandatory)"):            
+                #delete all existing data
+                delete_data_db(conn)
+                st.write("Clean DB done!")
+                
+                #Displat all as DataFrame
+                emp_df = get_all_data(conn)
+                st.dataframe(emp_df)            
+            
+                # Store in DB
+                # Check if 2nd file uploaded 
+                if imis_file2 is None:
+                    conc_filename = imis_file.name
+                else:
+                    conc_filename = imis_file.name + imis_file2.name
+                st.write(conc_filename)
+                save_to_db_upload_report(conn, conc_filename, "success")
+                save_to_db(conn, imis_df)
+            
+                #Displat all as DataFrame
+                emp_df = get_all_data(conn)
+                st.success("Here is the revised DB!")
+                st.dataframe(emp_df, height=180)
             
                   
 if __name__ == '__main__':
