@@ -14,6 +14,9 @@ from datetime import datetime
 # Database Functions
 from db_imis import *
 
+# Seat Management Functions
+from app_seat import *
+
 # Open CSV (unsed currently)
 @st.cache(persist=True, allow_output_mutation=True)
 def explore_data_csv(dataset):
@@ -57,6 +60,17 @@ def to_excel_dev(df1, df2, sh1, sh2, filename, df3=None):
     writer.save()
     processed_data = output.getvalue()
     return processed_data
+    
+def to_excel_dev_4df(df1, df2, df3, df4, sh1, sh2, sh3, sh4, filename):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output)
+    df1.to_excel(writer, sheet_name=sh1, index = True)
+    df2.to_excel(writer, sheet_name=sh2, index = True)
+    df3.to_excel(writer, sheet_name=sh3, index = True)
+    df4.to_excel(writer, sheet_name=sh4, index = True)
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data    
 
 def get_table_download_link(df1, df2, sh1, sh2, filename, df3=None):
     """Generates a link allowing the data in a given panda dataframe to be downloaded
@@ -68,6 +82,17 @@ def get_table_download_link(df1, df2, sh1, sh2, filename, df3=None):
     n = datetime.now()
     filename_timestamp = f'{filename}_{n.year}_{n.month}_{n.day}_{n.hour}_{n.minute}_{n.second}.xlsx'
     return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename_timestamp}>Download as **({filename_timestamp})** file</a>' # decode b'abc' => abc    
+
+def get_table_download_link_4df(df1, df2, df3, df4, sh1, sh2, sh3, sh4, filename):
+    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    in:  dataframe1, dataframe2, sheetname1, sheetname2, filename
+    out: href string
+    """
+    val = to_excel_dev_4df(df1, df2, df3, df4, sh1, sh2, sh3, sh4, filename)
+    b64 = base64.b64encode(val)  # val looks like b'...' 
+    n = datetime.now()
+    filename_timestamp = f'{filename}_{n.year}_{n.month}_{n.day}_{n.hour}_{n.minute}_{n.second}.xlsx'
+    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download={filename_timestamp}>Download as **({filename_timestamp})** file</a>' # decode b'abc' => abc   
 
 #Still Pending ???
 def file_selector(folder_path='./downloads'):
@@ -768,7 +793,7 @@ def main():
 		"""
     st.markdown(html_temp.format('royalblue','white'),unsafe_allow_html=True)
     
-    menu = ["Project FTE View", "Compare 2 versions", "Pipeline Opp", "RevRec", "AdminUpload", "About"]
+    menu = ["Project FTE View", "Compare 2 versions", "Pipeline Opp", "RevRec", "AdminUpload", "SeatManagement", "About"]
     choice = st.sidebar.selectbox("Select Option",menu)
 
     if choice == "Project FTE View":
@@ -936,6 +961,12 @@ def main():
                 st.success("Here is the revised DB!")
                 st.dataframe(emp_df, height=180)
             
+    elif choice == "SeatManagement":
+    
+        html_temp2 = """ <h3 style="color:{};text-align:center;">Seat Management Dashboard</h3> """
+        st.markdown(html_temp2.format('royalblue','white'),unsafe_allow_html=True)
+        
+        seat_mgmt()             
                   
 if __name__ == '__main__':
     main()
