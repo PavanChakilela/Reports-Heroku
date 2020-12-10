@@ -144,13 +144,13 @@ def seat_df_error_scenario(seat_df):
     seat_filter_df = seat_df.copy()
 
     #RFP scope but Excluded
-    RFP_filter = ((seat_filter_df['Service_Grouping'] == 'Invest & Maintenance') & (seat_filter_df['Include_Exclude'] == 'Exclude'))  
-    seat_err_df2 = seat_filter_df[RFP_filter]
-    seat_err_df2['ErrorScenario'] = "RFP Scoped but Excluded"
-    seat_err_df = seat_err_df2
-    seat_filter_df['ErrorScenario'] = np.where(RFP_filter, "RFP Scoped but Excluded", "NoError")
-    NonError_filter = (seat_filter_df['ErrorScenario'] == "NoError")
-    seat_filter_df = seat_filter_df[NonError_filter]
+    #RFP_filter = ((seat_filter_df['Service_Grouping'] == 'Invest & Maintenance') & (seat_filter_df['Include_Exclude'] == 'Exclude'))  
+    #seat_err_df2 = seat_filter_df[RFP_filter]
+    #seat_err_df2['ErrorScenario'] = "RFP Scoped but Excluded"
+    #seat_err_df = seat_err_df2
+    #seat_filter_df['ErrorScenario'] = np.where(RFP_filter, "RFP Scoped but Excluded", "NoError")
+    #NonError_filter = (seat_filter_df['ErrorScenario'] == "NoError")
+    #seat_filter_df = seat_filter_df[NonError_filter]
     
               
     #Not-RFP scope, but Included
