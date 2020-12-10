@@ -142,6 +142,7 @@ def seat_df_error_scenario(seat_df):
 
     #Seat_df (original) whereas seat_filter_df is filtered DF 
     seat_filter_df = seat_df.copy()
+    seat_err_df = pd.DataFrame()
 
     #RFP scope but Excluded
     #RFP_filter = ((seat_filter_df['Service_Grouping'] == 'Invest & Maintenance') & (seat_filter_df['Include_Exclude'] == 'Exclude'))  
