@@ -483,7 +483,13 @@ def seat_mgmt():
         seat_df1.rename(columns = {"Required_Cog_Laptop_(_YES/NO)": "Required_Cog_Laptop"}, inplace = True)
         seat_df1.rename(columns = {"Shared_Seat/Dedicated_Seat_Seat": "Shared_Dedicated_Seat"}, inplace = True)
         seat_df1['FTE'] = seat_df1['Percent_Allocation']/100.0
-        seat_df1 = seat_df1.fillna(0).astype({"Floor":'int', "Module":'int', 'Associate_ID':'int'})  
+        seat_df1["Wing"].fillna("0", inplace = True)
+        seat_df1['Associate_ID'] = pd.to_numeric(seat_df1['Associate_ID'], errors='coerce')
+        seat_df1["Associate_ID"].fillna("0", inplace = True)
+        seat_df1["Floor"].fillna("0", inplace = True)
+        seat_df1["Module"].fillna("0", inplace = True)
+        #seat_df1 = seat_df1.fillna(0).astype({"Floor":'int', "Module":'int', 'Associate_ID':'int'})  
+        #seat_df1 = seat_df1.fillna(0, inplace=True)
         seat_df1['Floor_Wing_Module'] = seat_df1[['Floor','Wing', 'Module']].apply(lambda x : '{}Floor-{}Wing-{}ODC'.format(x[0],x[1],x[2]), axis=1)
         seat_df1['Seat_Type_Associate'] = seat_df1[['Associate_ID', 'Associate_Name', 'Shared_Dedicated_Seat',  \
                                                     'Cubicle_Type', 'Proposed_Seat_Details' \
