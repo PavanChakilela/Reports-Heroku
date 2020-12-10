@@ -488,7 +488,8 @@ def seat_mgmt():
         seat_df1["Associate_ID"].fillna("0", inplace = True)
         seat_df1["Floor"].fillna("0", inplace = True)
         seat_df1["Module"].fillna("0", inplace = True)
-        #seat_df1 = seat_df1.fillna(0).astype({"Floor":'int', "Module":'int', 'Associate_ID':'int'})  
+        #seat_df1 = seat_df1.fillna(0).astype({"Floor":'int', "Module":'int', 'Associate_ID':'int'})
+        seat_df1 = seat_df1.fillna(0).astype({"Floor":'int', "Module":'int'})
         #seat_df1 = seat_df1.fillna(0, inplace=True)
         seat_df1['Floor_Wing_Module'] = seat_df1[['Floor','Wing', 'Module']].apply(lambda x : '{}Floor-{}Wing-{}ODC'.format(x[0],x[1],x[2]), axis=1)
         seat_df1['Seat_Type_Associate'] = seat_df1[['Associate_ID', 'Associate_Name', 'Shared_Dedicated_Seat',  \
