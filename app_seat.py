@@ -486,8 +486,12 @@ def seat_mgmt():
         seat_df1["Wing"].fillna("0", inplace = True)
         seat_df1['Associate_ID'] = pd.to_numeric(seat_df1['Associate_ID'], errors='coerce')
         seat_df1["Associate_ID"].fillna("0", inplace = True)
+        
+        seat_df1['Floor'] = pd.to_numeric(seat_df1['Floor'], errors='coerce')
         seat_df1["Floor"].fillna("0", inplace = True)
-        seat_df1["Module"].fillna("0", inplace = True)
+        seat_df1['Module'] = pd.to_numeric(seat_df1['Module'], errors='coerce')
+        seat_df1["Module"].fillna("0", inplace = True)        
+
         seat_df1 = seat_df1.fillna(0).astype({"Floor":'int', "Module":'int', 'Associate_ID':'int'})
         #seat_df1 = seat_df1.fillna(0).astype({"Floor":'int', "Module":'int'})
         #seat_df1 = seat_df1.fillna(0, inplace=True)
