@@ -150,7 +150,7 @@ def map_designations(proj_data):
 #Calculate and Display FTE counts 
 def display_FTE_count(proj_data):      
     
-    c1,c2,c3, c4 = st.beta_columns([1.2,1,1,1])
+    c1,c2,c3, c4 = st.columns([1.2,1,1,1])
             
     with c1:
         with st.expander("Count of Associates"):
@@ -233,7 +233,7 @@ def display_FTE_designation_split(proj_data):
     #Total Column (sum of Offshore & Onsite rows)
     proj_FTE_matrix.loc[:,'TOTAL'] = proj_FTE_matrix.loc[:,'Offshore'] + proj_FTE_matrix.loc[:,'Onsite']
     
-    c1,c2 = st.beta_columns([1.5,2])
+    c1,c2 = st.columns([1.5,2])
      
     #Display FTE Designation Matrix View 
     with c1:
@@ -431,7 +431,7 @@ def pipeline_opp_handling():
         #Display project specific DataFrame for the selected List of Projects
         st.dataframe(pipe_data1)
         
-        c1,c2 = st.beta_columns([1,1.25])
+        c1,c2 = st.columns([1,1.25])
     
         #Display Shared vs Small TCV
         with c1:
@@ -553,7 +553,7 @@ def display_trends(proj_data, proj_FTE_matrix):
     
     st.success("Customizable Plot (1. **FTE-Count-View**) & (2. **FTE % View**) of: {} for :: {}".format(type_of_plot,selected_column_names))
     
-    c1,c2 = st.beta_columns([1,1])
+    c1,c2 = st.columns([1,1])
             
     #Display 
     with c1:
@@ -633,7 +633,7 @@ def span_details(proj_data, proj_FTE_matrix):
         proj_SPAN_matrix.loc["Revised_SPAN",location] = (x + conv_target)/(y - conv_target)
         
                                                 
-    c1, c2, c3 = st.beta_columns([1.8,1, 1])
+    c1, c2, c3 = st.columns([1.8,1, 1])
     
     #Display FTE Designation Matrix View 
     with c1:
@@ -899,7 +899,7 @@ def main():
         init_db_upload_report(conn)
         st.write("DB connection established!")
         
-        c1,c2 = st.beta_columns([2, 1])
+        c1,c2 = st.columns([2, 1])
         
         with c1:
             upload_Rep = get_all_upload_report(conn)
