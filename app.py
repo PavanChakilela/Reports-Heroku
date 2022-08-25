@@ -153,20 +153,20 @@ def display_FTE_count(proj_data):
     c1,c2,c3, c4 = st.beta_columns([1.2,1,1,1])
             
     with c1:
-        with st.beta_expander("Count of Associates"):
+        with st.expander("Count of Associates"):
             st.write(len(proj_data))
 
     with c2:
-        with st.beta_expander("Total FTE"):
+        with st.expander("Total FTE"):
             st.write(proj_data['FTE'].sum().round(2))
 
     with c3:
-        with st.beta_expander("Onsite FTE"):
+        with st.expander("Onsite FTE"):
             on_filter = (proj_data['Offshore_Onsite'] == 'Onsite')
             st.write(proj_data[on_filter]['FTE'].sum().round(2)) 
 
     with c4:
-        with st.beta_expander("Offshore FTE"):
+        with st.expander("Offshore FTE"):
             off_filter = (proj_data['Offshore_Onsite'] == 'Offshore')
             st.write(proj_data[off_filter]['FTE'].sum().round(2))
     return proj_data  
@@ -816,7 +816,7 @@ def main():
             #Display only if DB data is available
             if len(emp_df) > 0:
                 st.info(f"Display current database from the file ==> ***{upload_Rep['File_Name'][0]}***!")
-                with st.beta_expander('Complete View',expanded=False):
+                with st.expander('Complete View',expanded=False):
                     st.dataframe(emp_df) 
 
                 #Show FTE Pyramid, Trends, SPAN details.    
@@ -840,7 +840,7 @@ def main():
                 #All Projects, All Associates as-is dataframe
                 st.info("Refer Original records of ALL Projects / Associates details")
         
-                with st.beta_expander('Complete View (as-is IMIS report)',expanded=False):
+                with st.expander('Complete View (as-is IMIS report)',expanded=False):
                     st.dataframe(data)
                     
                 #Replace Column Names
@@ -868,10 +868,10 @@ def main():
             #Compare 2 versions
             st.subheader("Comparision of 2 versions")
                 
-            with st.beta_expander('Complete View (as-is IMIS report1)',expanded=False):
+            with st.expander('Complete View (as-is IMIS report1)',expanded=False):
                 st.dataframe(data1)
             
-            with st.beta_expander('Complete View (as-is IMIS report2)',expanded=False):
+            with st.expander('Complete View (as-is IMIS report2)',expanded=False):
                 st.dataframe(data2)            
                 
             #Project Specific
