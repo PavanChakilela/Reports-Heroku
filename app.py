@@ -859,7 +859,7 @@ def main():
             #Open IMIS file1
             data1 = file_excel_explore_data(my_dataset1, key="Comparesh1")
 
-        my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["csv"], key="ver1")
+        my_dataset2 = st.sidebar.file_uploader("Upload 2nd IMIS Allocation File in CSV format", type=["csv"], key="ver2")
         if my_dataset2 is not None:
 
             #Open IMIS file2
