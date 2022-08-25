@@ -208,7 +208,7 @@ def display_FTE_designation_split(proj_data):
                                        'TOTAL' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]})
     
     # round to two decimal places in python pandas 
-    pd.set_option('precision', 2)   
+    pd.set_option('display.precision', 2)   
     
     proj_FTE_matrix['Designation'] = "PAT PA A SA M SM AD D SD CWR TOTAL".split()
     proj_FTE_matrix.set_index('Designation', inplace=True)
@@ -504,7 +504,7 @@ def pipeline_opp_handling():
 def display_trends(proj_data, proj_FTE_matrix):
     
     # round to two decimal places in python pandas 
-    pd.set_option('precision', 2)   
+    pd.set_option('display.precision', 2)   
 
     #Generate pivot for FTE COUNTS
     pivot_proj_FTE_count = pd.DataFrame(proj_data)
@@ -596,7 +596,7 @@ def span_details(proj_data, proj_FTE_matrix):
                                       'Onsite'  : [0.0, 0.0, 0.0, 0.0, 0.0], })
     
     # round to two decimal places in python pandas 
-    pd.set_option('precision', 2)   
+    pd.set_option('display.precision', 2)   
     
     proj_SPAN_matrix['typeDesignation'] = "A- SA+ Current_SPAN Target_Conversion Revised_SPAN".split()
     proj_SPAN_matrix.set_index('typeDesignation', inplace=True)
